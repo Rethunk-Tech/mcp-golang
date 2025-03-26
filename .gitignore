@@ -10,6 +10,11 @@
 # Node
 node_modules/
 
+# Editor
+.cursorrules
+.idea/
+.vscode/
+
 # Build outputs
 build/
 dist/
