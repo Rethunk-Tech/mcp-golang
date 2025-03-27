@@ -7,6 +7,41 @@ import { z } from 'zod'
 const execAsync = promisify(exec)
 
 /**
+ * Execute a Go command and handle its output consistently
+ *
+ * @param command The Go command to execute
+ * @param successMessage Default message when command succeeds but has no output
+ * @returns Object with content and optional error flag
+ */
+async function executeGoCommand(command: string, successMessage: string): Promise<{
+  content: { type: 'text'; text: string }[];
+  isError?: boolean;
+}> {
+  try {
+    const { stdout, stderr } = await execAsync(command)
+    return {
+      content: [{
+        type: 'text' as const,
+        text: stdout || stderr || successMessage
+      }]
+    }
+  } catch (error) {
+    // Extract stdout/stderr from error object if available
+    const errorOutput = error instanceof Error && 'stdout' in error
+      ? (error as unknown as { stdout: string }).stdout || (error as unknown as { stderr: string }).stderr
+      : String(error)
+
+    return {
+      content: [{
+        type: 'text' as const,
+        text: errorOutput || `Error running command: ${error instanceof Error ? error.message : String(error)}`
+      }],
+      isError: true
+    }
+  }
+}
+
+/**
  * Registers Go-related tools with the MCP server
  * Implements commands for Go code analysis and testing
  */
@@ -18,27 +53,10 @@ export function registerGoTools(server: McpServer): void {
       path: z.string().default('./...'),
     },
     async ({ path }: { path: string }) => {
-      try {
-        const { stdout, stderr } = await execAsync(`go run github.com/remyoudompheng/go-misc/deadcode ${path}`)
-        return {
-          content: [{
-            type: 'text',
-            text: stdout || stderr || 'No dead code found'
-          }]
-        }
-      } catch (error) {
-        // If the command fails, it might be because dead code was found
-        const errorOutput = error instanceof Error && 'stdout' in error
-          ? (error as unknown as { stdout: string }).stdout
-          : String(error)
-
-        return {
-          content: [{
-            type: 'text',
-            text: errorOutput || `Error running deadcode: ${error instanceof Error ? error.message : String(error)}`
-          }]
-        }
-      }
+      return executeGoCommand(
+        `go run github.com/remyoudompheng/go-misc/deadcode ${path}`,
+        'No dead code found'
+      )
     }
   )
 
@@ -49,27 +67,10 @@ export function registerGoTools(server: McpServer): void {
       path: z.string().default('./...'),
     },
     async ({ path }: { path: string }) => {
-      try {
-        const { stdout, stderr } = await execAsync(`go vet ${path}`)
-        return {
-          content: [{
-            type: 'text',
-            text: stdout || stderr || 'No issues found by go vet'
-          }]
-        }
-      } catch (error) {
-        // If the command fails, it might be because issues were found
-        const errorOutput = error instanceof Error && 'stderr' in error
-          ? (error as unknown as { stderr: string }).stderr
-          : String(error)
-
-        return {
-          content: [{
-            type: 'text',
-            text: errorOutput || `Error running go vet: ${error instanceof Error ? error.message : String(error)}`
-          }]
-        }
-      }
+      return executeGoCommand(
+        `go vet ${path}`,
+        'No issues found by go vet'
+      )
     }
   )
 
@@ -81,24 +82,11 @@ export function registerGoTools(server: McpServer): void {
       write: z.boolean().default(false),
     },
     async ({ path, write }: { path: string, write: boolean }) => {
-      try {
-        const writeFlag = write ? '-w' : ''
-        const { stdout, stderr } = await execAsync(`go fmt ${writeFlag} ${path}`)
-        return {
-          content: [{
-            type: 'text',
-            text: stdout || stderr || 'No formatting changes needed'
-          }]
-        }
-      } catch (error) {
-        return {
-          content: [{
-            type: 'text',
-            text: `Error running go fmt: ${error instanceof Error ? error.message : String(error)}`
-          }],
-          isError: true
-        }
-      }
+      const writeFlag = write ? '-w' : ''
+      return executeGoCommand(
+        `go fmt ${writeFlag} ${path}`,
+        'No formatting changes needed'
+      )
     }
   )
 
@@ -109,23 +97,10 @@ export function registerGoTools(server: McpServer): void {
       path: z.string().default('./...'),
     },
     async ({ path }: { path: string }) => {
-      try {
-        const { stdout, stderr } = await execAsync(`golint ${path}`)
-        return {
-          content: [{
-            type: 'text',
-            text: stdout || stderr || 'No lint issues found'
-          }]
-        }
-      } catch (error) {
-        return {
-          content: [{
-            type: 'text',
-            text: `Error running golint: ${error instanceof Error ? error.message : String(error)}`
-          }],
-          isError: true
-        }
-      }
+      return executeGoCommand(
+        `golint ${path}`,
+        'No lint issues found'
+      )
     }
   )
 
@@ -136,28 +111,10 @@ export function registerGoTools(server: McpServer): void {
       path: z.string().default('./...'),
     },
     async ({ path }: { path: string }) => {
-      try {
-        const { stdout, stderr } = await execAsync(`go test -v ${path}`)
-        return {
-          content: [{
-            type: 'text',
-            text: stdout || stderr || 'Tests passed with no output'
-          }]
-        }
-      } catch (error) {
-        // If the command fails, it might be because tests failed
-        const errorOutput = error instanceof Error && 'stdout' in error
-          ? (error as unknown as { stdout: string }).stdout
-          : String(error)
-
-        return {
-          content: [{
-            type: 'text',
-            text: errorOutput || `Error running tests: ${error instanceof Error ? error.message : String(error)}`
-          }],
-          isError: true
-        }
-      }
+      return executeGoCommand(
+        `go test -v ${path}`,
+        'Tests passed with no output'
+      )
     }
   )
 
@@ -167,24 +124,14 @@ export function registerGoTools(server: McpServer): void {
     {
       path: z.string().default('./...'),
     },
-    async ({ }: { path: string }) => {
-      try {
-        const { stdout, stderr } = await execAsync('go mod tidy')
-        return {
-          content: [{
-            type: 'text',
-            text: stdout || stderr || 'Dependencies cleaned up successfully'
-          }]
-        }
-      } catch (error) {
-        return {
-          content: [{
-            type: 'text',
-            text: `Error running go mod tidy: ${error instanceof Error ? error.message : String(error)}`
-          }],
-          isError: true
-        }
-      }
+    async ({ path }: { path: string }) => {
+      // Note: go mod tidy is typically run in the directory containing go.mod
+      // The path parameter is used to cd to the directory first if needed
+      const cdCommand = path.startsWith('./...') ? '' : `cd ${path} &&`
+      return executeGoCommand(
+        `${cdCommand} go mod tidy`,
+        'Dependencies cleaned up successfully'
+      )
     }
   )
 }
