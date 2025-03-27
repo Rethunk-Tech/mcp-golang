@@ -1,9 +1,11 @@
-import { McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js'
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
+import { URL } from 'url'
+import { registerGoTools } from './tools/goTools.js'
 import { registerNoteTools } from './tools/noteTools.js'
 
 // Constants for server metadata
-const SERVER_NAME = 'mcp-template-node'
+const SERVER_NAME = 'mcp-golang'
 const SERVER_VERSION = '1.0.0'
 
 /**
@@ -14,12 +16,7 @@ const SERVER_VERSION = '1.0.0'
  * - Tools: Functions that can perform actions and have side effects
  * - Prompts: Templates to guide LLM interactions
  *
- * This example server demonstrates:
- * 1. Server initialization and configuration
- * 2. Resource registration (static and parameterized)
- * 3. Tool registration for note management
- * 4. Prompt registration for user guidance
- * 5. Transport connection using stdio
+ * This server provides tools for Go code analysis and testing
  */
 export async function main(): Promise<void> {
   try {
@@ -31,14 +28,17 @@ export async function main(): Promise<void> {
       version: SERVER_VERSION
     })
 
-    // Register all note tools
+    // Register all note tools (for demonstration purposes)
     registerNoteTools(server)
+
+    // Register all Go tools
+    registerGoTools(server)
 
     // Static resource example: Server configuration
     server.resource(
       'config',
       'config://app',
-      async (uri) => ({
+      async (uri: URL) => ({
         contents: [{
           uri: uri.href,
           text: JSON.stringify({
@@ -50,19 +50,7 @@ export async function main(): Promise<void> {
       })
     )
 
-    // Parameterized resource example: Note information
-    server.resource(
-      'note-info',
-      new ResourceTemplate('notes://{noteId}/info', { list: undefined }),
-      async (uri, params) => ({
-        contents: [{
-          uri: uri.href,
-          text: `Information about note ${params.noteId}`
-        }]
-      })
-    )
-
-    // Register a simple help prompt
+    // Register a help prompt
     server.prompt(
       'help',
       {},
@@ -71,7 +59,7 @@ export async function main(): Promise<void> {
           role: 'user',
           content: {
             type: 'text',
-            text: `This is the ${SERVER_NAME} server. You can use tools like create_note, list_notes, get_note, update_note, and delete_note to manage notes.`
+            text: `This is the ${SERVER_NAME} server. You can use Go tools like go_find_dead_code, go_vet, go_format, go_lint, go_test, and go_mod_tidy to analyze and test Go code.`
           }
         }]
       })
