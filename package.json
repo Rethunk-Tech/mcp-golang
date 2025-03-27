@@ -1,6 +1,6 @@
 {
   "author": "Damon Blais <damon@rethunk.tech>",
-  "description": "A template repository for creating MCP (Model Context Protocol) servers in Node.js/TypeScript",
+  "description": "A Model Context Protocol (MCP) server that provides Go language tools for LLMs to analyze, test, and format Go code",
   "engines": {
     "node": ">=18.0.0"
   },
@@ -9,11 +9,14 @@
     "model-context-protocol",
     "llm",
     "ai",
-    "template"
+    "golang",
+    "go",
+    "static-analysis",
+    "code-tools"
   ],
   "license": "MIT",
   "main": "build/index.js",
-  "name": "mcp-template-node",
+  "name": "mcp-golang",
   "packageManager": "yarn@4.7.0",
   "type": "module",
   "version": "1.0.0",

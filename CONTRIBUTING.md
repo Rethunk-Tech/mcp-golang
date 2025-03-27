@@ -31,12 +31,15 @@ Thank you for your interest in contributing to the MCP Template Node project! Th
 ## Project Structure
 
 ```
+cmd/                # Go example code for testing
+├── example/        # Simple Go application for testing tools
 src/
-├── errors/        # Custom error classes
-├── tools/         # MCP tool implementations
-│   └── __tests__/ # Tool tests
-├── types/         # TypeScript type definitions
-└── index.ts       # Main server entry point with MCP examples
+├── errors/         # Custom error classes
+├── tools/          # MCP tool implementations
+│   ├── goTools.ts  # Go tools for LLM
+│   └── noteTools.ts # Example note tools
+├── types/          # TypeScript type definitions
+└── index.ts        # Main server entry point
 ```
 
 ## Coding Guidelines
@@ -60,7 +63,14 @@ src/
    - Handle all possible error cases
    - Provide clear error messages
 
-4. **MCP Components Implementation**
+4. **Go Tool Implementation**
+   - Tool commands should be executable in any Go environment
+   - Handle command output uniformly across tools
+   - Properly parse both stdout and stderr
+   - Return appropriate exit codes and error messages
+   - Handle command failures gracefully
+
+5. **MCP Components Implementation**
 
    **Tools:**
    - Keep tools focused and single-purpose
@@ -181,11 +191,11 @@ Implements fuzzy search for notes using title and content.
    - Return clear success or error responses
    - Provide descriptive names that indicate the action
 
-2. **Resource Design**
-   - Keep resources focused on providing data
-   - Avoid complex computations in resources
-   - Use appropriate URI patterns
-   - Establish consistent content formats
+2. **Go Tool Design**
+   - Use consistent parameter naming and defaults
+   - Handle process output consistently
+   - Provide clear error messages for command failures
+   - Include documentation for each Go tool
 
 3. **Error Handling**
    - Use custom error classes
@@ -210,4 +220,4 @@ Feel free to open an issue for:
 
 ## License
 
-By contributing to MCP Template Node, you agree that your contributions will be licensed under the project's MIT License.
+By contributing to MCP Golang, you agree that your contributions will be licensed under the project's MIT License.

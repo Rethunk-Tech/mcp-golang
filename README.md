@@ -1,6 +1,6 @@
-# MCP Template Node
+# MCP Golang
 
-A template repository for creating Model Context Protocol (MCP) servers in Node.js/TypeScript. This template demonstrates a simple notes management system using the MCP protocol.
+A Model Context Protocol (MCP) server that provides Go language tools for LLMs to analyze, test, and format Go code.
 
 ## What is MCP?
 
@@ -9,35 +9,42 @@ The Model Context Protocol (MCP) is a standardized way for applications to provi
 ## Features
 
 - TypeScript implementation with strict type checking
-- Simple notes management system with basic CRUD operations
-- Complete examples of MCP concepts (Tools, Resources, Prompts)
-- In-memory storage for notes
+- Full set of Go code analysis tools:
+  - `go_find_dead_code`: Find unused code in Go projects
+  - `go_vet`: Run Go's static analyzer
+  - `go_format`: Format Go code
+  - `go_lint`: Run Go linting
+  - `go_test`: Run Go tests
+  - `go_mod_tidy`: Clean up Go module dependencies
 - Comprehensive error handling and validation
-- Unit tests with Vitest
-- VS Code debugging configuration
-- GitHub Actions CI workflow for testing and building
+- Passes tool output directly to the LLM
 
 ## Prerequisites
 
 - Node.js 18 or later
 - npm or yarn
+- Go 1.18 or later
+- The following Go tools installed:
+  - `golint`: `go install golang.org/x/lint/golint@latest`
+  - `deadcode`: `go install github.com/remyoudompheng/go-misc/deadcode@latest`
 
 ## Project Structure
 
 ```shell
-mcp-template-node/
+mcp-golang/
 ├── build/                # Compiled JavaScript files
+├── cmd/                  # Example Go code for testing
+│   └── example/          # Simple Go application
 ├── src/
 │   ├── __tests__/        # Integration tests and test utilities
 │   ├── errors/           # Custom error classes
 │   ├── tools/            # MCP tool implementations
-│   │   └── __tests__/    # Tool unit tests
+│   │   ├── goTools.ts    # Go tools for LLM
+│   │   └── noteTools.ts  # Example note tools
 │   ├── types/            # TypeScript type definitions
-│   │   └── __tests__/    # Type tests
-│   └── index.ts          # Main server entry point with MCP examples
+│   └── index.ts          # Main server entry point
 ├── package.json          # Project configuration
 ├── tsconfig.json         # TypeScript configuration
-├── eslint.config.mjs     # ESLint flat configuration
 └── README.md             # Project documentation
 ```
 
@@ -46,8 +53,8 @@ mcp-template-node/
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/Rethunk-Tech/mcp-template-node.git
-   cd mcp-template-node
+   git clone https://github.com/Rethunk-Tech/mcp-golang.git
+   cd mcp-golang
    ```
 
 2. Install dependencies:
@@ -70,59 +77,6 @@ mcp-template-node/
 - Fix linting issues: `yarn lint:fix`
 - Run tests: `yarn test`
 
-## Testing
-
-This project includes comprehensive tests to verify the functionality of the MCP server and its tools.
-
-### Running Tests
-
-Run all tests:
-
-```bash
-yarn test
-```
-
-Run tests in watch mode (rerun tests when files change):
-
-```bash
-yarn test:watch
-```
-
-Run tests with coverage:
-
-```bash
-yarn test:coverage
-```
-
-### Test Structure
-
-- **Unit Tests**: Located in `__tests__` directories near the code they test
-- **Integration Tests**: Located in `src/__tests__/`
-- **Test Utilities**: Common test helpers in `src/__tests__/test-utils.ts`
-
-### Writing Tests
-
-The project includes a MockMcpServer for testing tools without real MCP dependencies:
-
-```typescript
-import { MockMcpServer } from '../__tests__/test-utils.js';
-
-describe('My Tool Tests', () => {
-  let server: MockMcpServer;
-
-  beforeEach(() => {
-    server = new MockMcpServer();
-    // Register tools
-    registerMyTools(server as any);
-  });
-
-  it('should perform some action', async () => {
-    const result = await server.callTool('my_tool', { param: 'value' });
-    expect(result.content[0].text).toContain('Expected text');
-  });
-});
-```
-
 ## Testing with MCP Inspector
 
 For standalone testing, use the MCP Inspector tool:
@@ -133,37 +87,55 @@ yarn inspector
 
 This will open an interactive session where you can test your MCP tools.
 
-## Available Tools
+## Available Go Tools
 
-### Create Note
+### Find Dead Code
 
-Creates a new note with title and content.
+```
+go_find_dead_code({ path: "./..." })
+```
 
-### List Notes
+Finds unused code in Go projects.
 
-Lists all available notes with their IDs and titles.
+### Go Vet
 
-### Get Note
+```
+go_vet({ path: "./..." })
+```
 
-Retrieves a specific note by ID.
+Runs Go's built-in static analyzer to find potential issues.
 
-### Update Note
+### Format Go Code
 
-Updates an existing note's title, content, or tags.
+```
+go_format({ path: "./...", write: true })
+```
 
-### Delete Note
+Formats Go code. Set `write` to true to modify files directly.
 
-Deletes a note by ID.
+### Lint Go Code
 
-## Extending the Template
+```
+go_lint({ path: "./..." })
+```
 
-To extend this template:
+Runs the Go linter to check for style and potential issues.
 
-1. Add new types in `src/types/`
-2. Implement new tools in `src/tools/`
-3. Add new resources in `src/index.ts`
-4. Create new prompt templates as needed
-5. Add tests for your new functionality
+### Run Go Tests
+
+```
+go_test({ path: "./..." })
+```
+
+Runs Go tests with verbose output.
+
+### Tidy Go Module Dependencies
+
+```
+go_mod_tidy({ path: "./..." })
+```
+
+Cleans up Go module dependencies.
 
 ## Contributing
 
