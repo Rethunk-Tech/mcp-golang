@@ -2,7 +2,6 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { URL } from 'url'
 import { registerGoTools } from './tools/goTools.js'
-import { registerNoteTools } from './tools/noteTools.js'
 
 // Constants for server metadata
 const SERVER_NAME = 'mcp-golang'
@@ -27,9 +26,6 @@ export async function main(): Promise<void> {
       name: SERVER_NAME,
       version: SERVER_VERSION
     })
-
-    // Register all note tools (for demonstration purposes)
-    registerNoteTools(server)
 
     // Register all Go tools
     registerGoTools(server)

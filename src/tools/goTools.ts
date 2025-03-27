@@ -10,15 +10,16 @@ const execAsync = promisify(exec)
  * Execute a Go command and handle its output consistently
  *
  * @param command The Go command to execute
+ * @param workingDir The directory to execute the command in
  * @param successMessage Default message when command succeeds but has no output
  * @returns Object with content and optional error flag
  */
-async function executeGoCommand(command: string, successMessage: string): Promise<{
+async function executeGoCommand(command: string, workingDir: string, successMessage: string): Promise<{
   content: { type: 'text'; text: string }[];
   isError?: boolean;
 }> {
   try {
-    const { stdout, stderr } = await execAsync(command)
+    const { stdout, stderr } = await execAsync(command, { cwd: workingDir })
     return {
       content: [{
         type: 'text' as const,
@@ -50,11 +51,13 @@ export function registerGoTools(server: McpServer): void {
   server.tool(
     'go_find_dead_code',
     {
-      path: z.string().default('./...'),
+      wd: z.string().describe('Working directory where the command will be executed'),
+      path: z.string().default('./...').describe('Path pattern to analyze (e.g., "./...", "./pkg/...", specific file)')
     },
-    async ({ path }: { path: string }) => {
+    async ({ wd, path }: { wd: string, path: string }) => {
       return executeGoCommand(
-        `go run github.com/remyoudompheng/go-misc/deadcode ${path}`,
+        `deadcode ${path}`,
+        wd,
         'No dead code found'
       )
     }
@@ -64,11 +67,13 @@ export function registerGoTools(server: McpServer): void {
   server.tool(
     'go_vet',
     {
-      path: z.string().default('./...'),
+      wd: z.string().describe('Working directory where the command will be executed'),
+      path: z.string().default('./...').describe('Path pattern to analyze (e.g., "./...", "./pkg/...", specific file)')
     },
-    async ({ path }: { path: string }) => {
+    async ({ wd, path }: { wd: string, path: string }) => {
       return executeGoCommand(
         `go vet ${path}`,
+        wd,
         'No issues found by go vet'
       )
     }
@@ -78,13 +83,15 @@ export function registerGoTools(server: McpServer): void {
   server.tool(
     'go_format',
     {
-      path: z.string().default('./...'),
-      write: z.boolean().default(false),
+      wd: z.string().describe('Working directory where the command will be executed'),
+      path: z.string().default('./...').describe('Path pattern of files to format (e.g., "./...", "./pkg/...", specific file)'),
+      write: z.boolean().default(false).describe('Whether to write changes directly to the source files (true) or just output the diff (false)')
     },
-    async ({ path, write }: { path: string, write: boolean }) => {
+    async ({ wd, path, write }: { wd: string, path: string, write: boolean }) => {
       const writeFlag = write ? '-w' : ''
       return executeGoCommand(
         `go fmt ${writeFlag} ${path}`,
+        wd,
         'No formatting changes needed'
       )
     }
@@ -94,11 +101,13 @@ export function registerGoTools(server: McpServer): void {
   server.tool(
     'go_lint',
     {
-      path: z.string().default('./...'),
+      wd: z.string().describe('Working directory where the command will be executed'),
+      path: z.string().default('./...').describe('Path pattern to lint (e.g., "./...", "./pkg/...", specific file)')
     },
-    async ({ path }: { path: string }) => {
+    async ({ wd, path }: { wd: string, path: string }) => {
       return executeGoCommand(
         `golint ${path}`,
+        wd,
         'No lint issues found'
       )
     }
@@ -108,11 +117,13 @@ export function registerGoTools(server: McpServer): void {
   server.tool(
     'go_test',
     {
-      path: z.string().default('./...'),
+      wd: z.string().describe('Working directory where the command will be executed'),
+      path: z.string().default('./...').describe('Path pattern for tests to run (e.g., "./...", "./pkg/...", specific package)')
     },
-    async ({ path }: { path: string }) => {
+    async ({ wd, path }: { wd: string, path: string }) => {
       return executeGoCommand(
         `go test -v ${path}`,
+        wd,
         'Tests passed with no output'
       )
     }
@@ -122,14 +133,12 @@ export function registerGoTools(server: McpServer): void {
   server.tool(
     'go_mod_tidy',
     {
-      path: z.string().default('./...'),
+      wd: z.string().describe('Working directory where the command will be executed (should contain go.mod file)')
     },
-    async ({ path }: { path: string }) => {
-      // Note: go mod tidy is typically run in the directory containing go.mod
-      // The path parameter is used to cd to the directory first if needed
-      const cdCommand = path.startsWith('./...') ? '' : `cd ${path} &&`
+    async ({ wd }: { wd: string }) => {
       return executeGoCommand(
-        `${cdCommand} go mod tidy`,
+        'go mod tidy',
+        wd,
         'Dependencies cleaned up successfully'
       )
     }
