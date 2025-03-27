@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { main } from '../index.js'
 
 // Constants matching those in index.ts
-const SERVER_NAME = 'mcp-template-node'
+const SERVER_NAME = 'mcp-golang'
 const SERVER_VERSION = '1.0.0'
 
 // Mock server connect function
@@ -25,8 +25,8 @@ vi.mock('@modelcontextprotocol/sdk/server/stdio.js', () => ({
   StdioServerTransport: vi.fn()
 }))
 
-vi.mock('../tools/noteTools.js', () => ({
-  registerNoteTools: vi.fn()
+vi.mock('../tools/goTools.js', () => ({
+  registerGoTools: vi.fn()
 }))
 
 describe('MCP Server', () => {
@@ -56,14 +56,14 @@ describe('MCP Server', () => {
     })
   })
 
-  it('should register note tools', async () => {
-    const { registerNoteTools } = await import('../tools/noteTools.js')
+  it('should register Go tools', async () => {
+    const { registerGoTools } = await import('../tools/goTools.js')
 
     await main()
 
-    // Verify registerNoteTools was called with the server instance
-    expect(registerNoteTools).toHaveBeenCalledTimes(1)
-    expect(registerNoteTools).toHaveBeenCalledWith(expect.any(Object))
+    // Verify registerGoTools was called with the server instance
+    expect(registerGoTools).toHaveBeenCalledTimes(1)
+    expect(registerGoTools).toHaveBeenCalledWith(expect.any(Object))
   })
 
   it('should connect to the stdio transport', async () => {
@@ -82,10 +82,9 @@ describe('MCP Server', () => {
 
     await main()
 
-    // Verify success message was logged
-    expect(mockedConsoleError).toHaveBeenCalledWith(
-      expect.stringContaining(`${SERVER_NAME} server started successfully`)
-    )
+    // Verify start and success messages were logged
+    expect(mockedConsoleError).toHaveBeenCalledWith(`Starting ${SERVER_NAME} v${SERVER_VERSION}...`)
+    expect(mockedConsoleError).toHaveBeenCalledWith(`${SERVER_NAME} server started successfully and ready to handle requests.`)
   })
 
   it('should handle initialization errors', async () => {
