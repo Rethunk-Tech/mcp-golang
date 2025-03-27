@@ -91,7 +91,7 @@ This will open an interactive session where you can test your MCP tools.
 
 ### Find Dead Code
 
-```
+```js
 go_find_dead_code({
   wd: "/path/to/go/project",
   path: "./..."
@@ -107,7 +107,7 @@ Finds unused code in Go projects.
 
 ### Go Vet
 
-```
+```js
 go_vet({
   wd: "/path/to/go/project",
   path: "./..."
@@ -123,7 +123,7 @@ Runs Go's built-in static analyzer to find potential issues.
 
 ### Format Go Code
 
-```
+```js
 go_format({
   wd: "/path/to/go/project",
   path: "./...",
@@ -141,7 +141,7 @@ Formats Go code. Set `write` to true to modify files directly.
 
 ### Lint Go Code
 
-```
+```js
 go_lint({
   wd: "/path/to/go/project",
   path: "./..."
@@ -157,7 +157,7 @@ Runs the Go linter to check for style and potential issues.
 
 ### Run Go Tests
 
-```
+```js
 go_test({
   wd: "/path/to/go/project",
   path: "./..."
@@ -173,7 +173,7 @@ Runs Go tests with verbose output.
 
 ### Tidy Go Module Dependencies
 
-```
+```js
 go_mod_tidy({
   wd: "/path/to/go/project"
 })
@@ -191,54 +191,29 @@ To integrate this MCP server with Cursor or Claude Desktop, add the following co
 
 ```json
 {
-  "servers": [
-    {
-      "name": "mcp-golang",
-      "command": "node /path/to/mcp-golang/build/index.js",
-      "tools": [
-        {
-          "name": "mcp_go_go_find_dead_code",
-          "backend_name": "go_find_dead_code",
-          "backend_server": "mcp-golang",
-          "description": "Find unused code in Go projects"
-        },
-        {
-          "name": "mcp_go_go_vet",
-          "backend_name": "go_vet",
-          "backend_server": "mcp-golang",
-          "description": "Run Go's static analyzer to find potential issues"
-        },
-        {
-          "name": "mcp_go_go_format",
-          "backend_name": "go_format",
-          "backend_server": "mcp-golang",
-          "description": "Format Go code with the option to write changes directly to files"
-        },
-        {
-          "name": "mcp_go_go_lint",
-          "backend_name": "go_lint",
-          "backend_server": "mcp-golang",
-          "description": "Run the Go linter to check for style and potential issues"
-        },
-        {
-          "name": "mcp_go_go_test",
-          "backend_name": "go_test",
-          "backend_server": "mcp-golang",
-          "description": "Run Go tests with verbose output"
-        },
-        {
-          "name": "mcp_go_go_mod_tidy",
-          "backend_name": "go_mod_tidy",
-          "backend_server": "mcp-golang",
-          "description": "Clean up Go module dependencies"
-        }
-      ]
+  "mcpServers": {
+    "mcp-golang": {
+      "command": "cmd",
+      "args": [
+        "/c",
+        "node C:\\path\\to\\mcp-golang\\build\\index.js"
+      ],
+      "enabled": true
     }
-  ]
+  }
 }
 ```
 
-Make sure to replace `/path/to/mcp-golang` with the actual path to your installation.
+Make sure to replace `C:\\path\\to\\mcp-golang` with the actual path to your installation, using double backslashes for Windows paths.
+
+You can then access the tools in Cursor or Claude Desktop with the following names:
+
+- `mcp_go_find_dead_code`
+- `mcp_go_vet`
+- `mcp_go_format`
+- `mcp_go_lint`
+- `mcp_go_test`
+- `mcp_go_mod_tidy`
 
 ## Contributing
 
