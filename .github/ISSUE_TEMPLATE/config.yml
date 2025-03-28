@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions and Discussions
+    url: https://github.com/yourusername/mcp-template-node/discussions
+    about: For questions and discussions about the MCP template node project
+  - name: MCP Documentation
+    url: https://modelcontextprotocol.github.io/
+    about: Official documentation for the Model Context Protocol

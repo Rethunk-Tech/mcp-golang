@@ -1,0 +1,27 @@
+# Yarn berry (zero install)
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+# Node
+node_modules/
+
+# Build outputs
+build/
+dist/
+
+# Editor
+.cursorrules
+.cursor/
+.idea/
+.vscode/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

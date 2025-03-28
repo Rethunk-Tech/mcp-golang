@@ -1,0 +1,61 @@
+{
+  "author": "Damon Blais <damon@rethunk.tech>",
+  "description": "A template repository for creating MCP (Model Context Protocol) servers in Node.js/TypeScript",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "llm",
+    "ai",
+    "template"
+  ],
+  "license": "MIT",
+  "main": "build/index.js",
+  "name": "mcp-template-node",
+  "packageManager": "yarn@4.7.0",
+  "type": "module",
+  "version": "1.0.0",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.8.0",
+    "uuid": "^11.1.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.23.0",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^22.13.14",
+    "@types/uuid": "^10.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.28.0",
+    "@typescript-eslint/parser": "^8.28.0",
+    "@vitest/coverage-v8": "3.0.9",
+    "eslint": "^9.23.0",
+    "globals": "^16.0.0",
+    "jest": "^29.7.0",
+    "nodemon": "^3.1.9",
+    "ts-jest": "^29.3.0",
+    "typescript": "^5.8.2",
+    "typescript-eslint": "^8.28.0",
+    "vitest": "^3.0.9"
+  },
+  "resolutions": {
+    "eslint": "^9.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "typescript-eslint": "^8.0.0"
+  },
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf build",
+    "dev": "tsc -w",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "prebuild": "yarn clean",
+    "start": "node build/index.js",
+    "inspector": "mcp-inspector",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  }
+}
