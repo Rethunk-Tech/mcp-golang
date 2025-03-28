@@ -17,6 +17,8 @@ vi.mock('child_process', () => ({
       return ''
     } else if (cmd.includes('deadcode')) {
       return 'main.go:10:6: unreachable func: unusedFunction\n'
+    } else if (cmd.includes('golangci-lint')) {
+      return 'main.go:15:9: SA4006: this value of `err` is never used (staticcheck)\n'
     } else {
       return 'mocked output for: ' + cmd
     }
@@ -79,6 +81,18 @@ describe('Go Tools', () => {
 
       expect(result.content[0].type).toBe('text')
       expect(result.content[0].text).toContain('main.go')
+    })
+  })
+
+  describe('go_lint', () => {
+    it('should run golangci-lint on Go code', async () => {
+      const result = await server.callTool('go_lint', {
+        wd: testWorkingDir,
+        path: './...'
+      })
+
+      expect(result.content[0].type).toBe('text')
+      expect(result.content[0].text).toContain('staticcheck')
     })
   })
 

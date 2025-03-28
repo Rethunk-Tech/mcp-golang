@@ -255,16 +255,16 @@ export function registerGoTools(server: McpServer): void {
 
       try {
         return executeGoCommand(
-          `golint ${path}`,
+          `golangci-lint run ${path}`,
           wd,
           'No lint issues found'
         )
       } catch (error) {
-        console.error('Error running golint:', error)
+        console.error('Error running golangci-lint:', error)
         return {
           content: [{
             type: 'text' as const,
-            text: `Error running golint: ${error instanceof Error ? error.message : String(error)}`
+            text: `Error running golangci-lint: ${error instanceof Error ? error.message : String(error)}`
           }],
           isError: true
         }

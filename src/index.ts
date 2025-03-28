@@ -55,7 +55,7 @@ export async function main(): Promise<void> {
           role: 'user',
           content: {
             type: 'text',
-            text: `This is the ${SERVER_NAME} server. You can use Go tools like go_find_dead_code, go_vet, go_format, go_lint, go_test, and go_mod_tidy to analyze and test Go code.`
+            text: `This is the ${SERVER_NAME} server. You can use Go tools like go_find_dead_code, go_vet, go_format, go_lint (using golangci-lint), go_test, and go_mod_tidy to analyze and test Go code.`
           }
         }]
       })
