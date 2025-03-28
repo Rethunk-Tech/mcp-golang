@@ -1,22 +1,24 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
-import { exec } from 'child_process'
+import { exec, ExecOptions, execSync, ExecSyncOptions } from 'child_process'
 import { promisify } from 'util'
 import { z } from 'zod'
 
 // Promisify exec for async/await usage
-const execAsync = promisify(exec)
+// Using explicit type assertion to avoid TypeScript errors
+const execAsync = promisify(exec) as (command: string, options?: ExecOptions) => Promise<{ stdout: string; stderr: string }>
 
 /**
- * Checks if a path is absolute, defined as containing more than two slashes (/ or \)
+ * Checks if a path appears to be absolute
  *
  * @param path The path to check
  * @returns True if the path is absolute, false otherwise
  */
 function isAbsolutePath(path: string): boolean {
-  // Count both forward and backward slashes
-  const slashCount = (path.match(/[/\\]/g) || []).length
-  return slashCount > 2
+  // Windows paths typically start with a drive letter followed by ":"
+  // Unix paths typically start with "/"
+  return /^[a-zA-Z]:/.test(path) || path.startsWith('/') || path.startsWith('\\')
 }
+
 
 /**
  * Creates an error response for invalid working directory paths
@@ -31,7 +33,7 @@ function createWdError(wd: string): {
   return {
     content: [{
       type: 'text' as const,
-      text: `Error: Working directory "${wd}" is not an absolute path. Please provide a path with more than 2 slashes.`
+      text: `Error: Working directory "${wd}" is not an absolute path. Please provide a valid absolute path.`
     }],
     isError: true
   }
@@ -50,14 +52,76 @@ async function executeGoCommand(command: string, workingDir: string, successMess
   isError?: boolean;
 }> {
   try {
-    const { stdout, stderr } = await execAsync(command, { cwd: workingDir })
-    return {
-      content: [{
-        type: 'text' as const,
-        text: stdout || stderr || successMessage
-      }]
+    let finalCommand = command
+
+    // Handle Windows specially
+    if (process.platform === 'win32') {
+      // For Windows paths with forward slashes, convert to Windows format
+      const windowsPath = workingDir.replace(/\//g, '\\')
+      console.error(`Original path: ${workingDir}, Windows path: ${windowsPath}`)
+
+      // Special handling for paths like /s/Projects/...
+      if (windowsPath.startsWith('\\s\\')) {
+        // Convert /s/Projects/... to s:\Projects\...
+        const converted = windowsPath.replace(/^\\s\\/, 's:\\')
+        console.error(`Converted path from ${windowsPath} to ${converted}`)
+
+        // Get drive letter without colon
+        const driveLetter = converted.charAt(0)
+
+        // Construct a command that:
+        // 1. Changes to the drive with /d parameter
+        // 2. Then changes to the specific directory
+        // 3. Then runs the command
+        finalCommand = `cd /d ${driveLetter}: && cd "${converted}" && ${command}`
+      } else {
+        // For standard Windows paths
+        finalCommand = `cd /d "${windowsPath}" && ${command}`
+      }
+
+      console.error(`Windows command: ${finalCommand}`)
+    } else {
+      // For non-Windows platforms, we'll use the cwd option
+      finalCommand = command
+    }
+
+    try {
+      console.error(`Running command: ${finalCommand}`)
+
+      // Execution options
+      const options: ExecSyncOptions = process.platform === 'win32'
+        ? { encoding: 'utf8', shell: 'cmd.exe' }
+        : { cwd: workingDir, encoding: 'utf8' }
+
+      // Try using synchronous execution
+      const output = execSync(finalCommand, options).toString()
+
+      return {
+        content: [{
+          type: 'text' as const,
+          text: output || successMessage
+        }]
+      }
+    } catch (syncError) {
+      console.error('Failed with execSync, attempting execAsync:', syncError)
+
+      // Fall back to async execution
+      const asyncOptions: ExecOptions = process.platform === 'win32'
+        ? { shell: 'cmd.exe' }
+        : { cwd: workingDir }
+
+      const { stdout, stderr } = await execAsync(finalCommand, asyncOptions)
+
+      return {
+        content: [{
+          type: 'text' as const,
+          text: stdout || stderr || successMessage
+        }]
+      }
     }
   } catch (error) {
+    console.error('Command execution error:', error)
+
     // Extract stdout/stderr from error object if available
     const errorOutput = error instanceof Error && 'stdout' in error
       ? (error as unknown as { stdout: string }).stdout || (error as unknown as { stderr: string }).stderr
@@ -91,11 +155,22 @@ export function registerGoTools(server: McpServer): void {
         return createWdError(wd)
       }
 
-      return executeGoCommand(
-        `deadcode ${path}`,
-        wd,
-        'No dead code found'
-      )
+      try {
+        return executeGoCommand(
+          `deadcode ${path}`,
+          wd,
+          'No dead code found'
+        )
+      } catch (error) {
+        console.error('Error running deadcode:', error)
+        return {
+          content: [{
+            type: 'text' as const,
+            text: `Error running deadcode: ${error instanceof Error ? error.message : String(error)}`
+          }],
+          isError: true
+        }
+      }
     }
   )
 
@@ -112,11 +187,22 @@ export function registerGoTools(server: McpServer): void {
         return createWdError(wd)
       }
 
-      return executeGoCommand(
-        `go vet ${path}`,
-        wd,
-        'No issues found by go vet'
-      )
+      try {
+        return executeGoCommand(
+          `go vet ${path}`,
+          wd,
+          'No issues found by go vet'
+        )
+      } catch (error) {
+        console.error('Error running go vet:', error)
+        return {
+          content: [{
+            type: 'text' as const,
+            text: `Error running go vet: ${error instanceof Error ? error.message : String(error)}`
+          }],
+          isError: true
+        }
+      }
     }
   )
 
@@ -135,11 +221,22 @@ export function registerGoTools(server: McpServer): void {
       }
 
       const writeFlag = write ? '-w' : ''
-      return executeGoCommand(
-        `go fmt ${writeFlag} ${path}`,
-        wd,
-        'No formatting changes needed'
-      )
+      try {
+        return executeGoCommand(
+          `go fmt ${writeFlag} ${path}`,
+          wd,
+          'No formatting changes needed'
+        )
+      } catch (error) {
+        console.error('Error running go fmt:', error)
+        return {
+          content: [{
+            type: 'text' as const,
+            text: `Error running go fmt: ${error instanceof Error ? error.message : String(error)}`
+          }],
+          isError: true
+        }
+      }
     }
   )
 
@@ -156,11 +253,22 @@ export function registerGoTools(server: McpServer): void {
         return createWdError(wd)
       }
 
-      return executeGoCommand(
-        `golint ${path}`,
-        wd,
-        'No lint issues found'
-      )
+      try {
+        return executeGoCommand(
+          `golint ${path}`,
+          wd,
+          'No lint issues found'
+        )
+      } catch (error) {
+        console.error('Error running golint:', error)
+        return {
+          content: [{
+            type: 'text' as const,
+            text: `Error running golint: ${error instanceof Error ? error.message : String(error)}`
+          }],
+          isError: true
+        }
+      }
     }
   )
 
@@ -177,11 +285,22 @@ export function registerGoTools(server: McpServer): void {
         return createWdError(wd)
       }
 
-      return executeGoCommand(
-        `go test -v ${path}`,
-        wd,
-        'Tests passed with no output'
-      )
+      try {
+        return executeGoCommand(
+          `go test -v ${path}`,
+          wd,
+          'Tests passed with no output'
+        )
+      } catch (error) {
+        console.error('Error running go test:', error)
+        return {
+          content: [{
+            type: 'text' as const,
+            text: `Error running go test: ${error instanceof Error ? error.message : String(error)}`
+          }],
+          isError: true
+        }
+      }
     }
   )
 
@@ -197,11 +316,22 @@ export function registerGoTools(server: McpServer): void {
         return createWdError(wd)
       }
 
-      return executeGoCommand(
-        'go mod tidy',
-        wd,
-        'Dependencies cleaned up successfully'
-      )
+      try {
+        return executeGoCommand(
+          'go mod tidy',
+          wd,
+          'Dependencies cleaned up successfully'
+        )
+      } catch (error) {
+        console.error('Error running go mod tidy:', error)
+        return {
+          content: [{
+            type: 'text' as const,
+            text: `Error running go mod tidy: ${error instanceof Error ? error.message : String(error)}`
+          }],
+          isError: true
+        }
+      }
     }
   )
 }
