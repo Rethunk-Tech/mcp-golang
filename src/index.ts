@@ -55,7 +55,14 @@ export async function main(): Promise<void> {
           role: 'user',
           content: {
             type: 'text',
-            text: `This is the ${SERVER_NAME} server. You can use Go tools like go_find_dead_code, go_vet, go_format (using gofumpt), go_lint (using golangci-lint), go_test, and go_mod_tidy to analyze and test Go code.`
+            text: `This is the ${SERVER_NAME} server. You can use the following Go tools:
+
+1. go_analyze: Comprehensive code analysis using golangci-lint with customizable severity levels and auto-fix options
+2. go_fix: Code cleanup tool that can run go mod tidy, goimports, and gofumpt in sequence
+3. go_test: Enhanced test runner with coverage reports and benchmark support
+4. go_mod_tidy: Dependency management tool that runs go mod tidy
+
+Each tool accepts a working directory (wd) parameter that must be an absolute path.`
           }
         }]
       })
