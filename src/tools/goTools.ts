@@ -212,27 +212,29 @@ export function registerGoTools(server: McpServer): void {
     {
       wd: z.string().describe('Working directory where the command will be executed'),
       path: z.string().default('./...').describe('Path pattern of files to format (e.g., "./...", "./pkg/...", specific file)'),
-      write: z.boolean().default(false).describe('Whether to write changes directly to the source files (true) or just output the diff (false)')
+      write: z.boolean().default(false).describe('Whether to write changes directly to the source files (true) or just output the diff (false)'),
+      extra: z.boolean().default(false).describe('Whether to apply more aggressive rules (enabled with the -extra flag)')
     },
-    async ({ wd, path, write }: { wd: string, path: string, write: boolean }) => {
+    async ({ wd, path, write, extra }: { wd: string, path: string, write: boolean, extra: boolean }) => {
       // Validate that working directory is an absolute path
       if (!isAbsolutePath(wd)) {
         return createWdError(wd)
       }
 
       const writeFlag = write ? '-w' : ''
+      const extraFlag = extra ? '-extra' : ''
       try {
         return executeGoCommand(
-          `go fmt ${writeFlag} ${path}`,
+          `gofumpt ${writeFlag} ${extraFlag} ${path}`,
           wd,
           'No formatting changes needed'
         )
       } catch (error) {
-        console.error('Error running go fmt:', error)
+        console.error('Error running gofumpt:', error)
         return {
           content: [{
             type: 'text' as const,
-            text: `Error running go fmt: ${error instanceof Error ? error.message : String(error)}`
+            text: `Error running gofumpt: ${error instanceof Error ? error.message : String(error)}`
           }],
           isError: true
         }

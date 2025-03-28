@@ -9,7 +9,10 @@ vi.mock('child_process', () => ({
   execSync: vi.fn((cmd) => {
     if (cmd.includes('go vet')) {
       return '# mocked go vet output'
-    } else if (cmd.includes('go fmt')) {
+    } else if (cmd.includes('gofumpt')) {
+      if (cmd.includes('-extra')) {
+        return 'main.go (with extra formatting)\n'
+      }
       return 'main.go\n'
     } else if (cmd.includes('go test')) {
       return 'ok  	github.com/example/pkg	0.123s\n'
@@ -72,7 +75,7 @@ describe('Go Tools', () => {
   })
 
   describe('go_format', () => {
-    it('should format Go code', async () => {
+    it('should format Go code with gofumpt', async () => {
       const result = await server.callTool('go_format', {
         wd: testWorkingDir,
         path: './...',
@@ -81,6 +84,18 @@ describe('Go Tools', () => {
 
       expect(result.content[0].type).toBe('text')
       expect(result.content[0].text).toContain('main.go')
+    })
+
+    it('should support extra formatting options', async () => {
+      const result = await server.callTool('go_format', {
+        wd: testWorkingDir,
+        path: './...',
+        write: true,
+        extra: true
+      })
+
+      expect(result.content[0].type).toBe('text')
+      expect(result.content[0].text).toContain('extra formatting')
     })
   })
 
