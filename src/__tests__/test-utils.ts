@@ -1,21 +1,20 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { vi } from 'vitest'
 import { z } from 'zod'
-import { Note } from '../types/note.js'
 
 /**
  * Type for tool handler function
  */
 type ToolHandler = (params: Record<string, unknown>) => Promise<{
-  content: Array<{ type: string; text: string }>;
-  isError?: boolean;
+  content: Array<{ type: string; text: string }>
+  isError?: boolean
 }>
 
 /**
  * Type for resource handler function
  */
 type ResourceHandler = (uri: URL, params: Record<string, unknown>) => Promise<{
-  contents: Array<{ uri: string; text: string }>;
+  contents: Array<{ uri: string; text: string }>
 }>
 
 /**
@@ -23,17 +22,17 @@ type ResourceHandler = (uri: URL, params: Record<string, unknown>) => Promise<{
  */
 type PromptHandler = (params: Record<string, unknown>) => {
   messages: Array<{
-    role: string;
-    content: { type: string; text: string };
-  }>;
+    role: string
+    content: { type: string; text: string }
+  }>
 }
 
 /**
  * Type for tool definition
  */
 interface ToolDefinition {
-  schema: z.ZodRawShape;
-  handler: ToolHandler;
+  schema: z.ZodRawShape
+  handler: ToolHandler
 }
 
 /**
@@ -60,29 +59,13 @@ export class MockMcpServer {
   }
 
   async callTool(name: string, params: Record<string, unknown>): Promise<{
-    content: Array<{ type: string; text: string }>;
-    isError?: boolean;
+    content: Array<{ type: string; text: string }>
+    isError?: boolean
   }> {
     if (!this.tools[name]) {
       throw new Error(`Tool not found: ${name}`)
     }
     return this.tools[name].handler(params)
-  }
-}
-
-/**
- * Create a mock note for testing
- */
-export function createMockNote(overrides: Partial<Note> = {}): Note {
-  const now = new Date()
-
-  return {
-    id: 'test123',
-    title: 'Test Note',
-    content: 'This is a test note',
-    createdAt: now,
-    updatedAt: now,
-    ...overrides
   }
 }
 
@@ -106,25 +89,14 @@ export function mockConsole(): { restore: () => void } {
 }
 
 /**
- * Extract ID from a tool response
- */
-export function extractIdFromResponse(response: {
-  content: Array<{ type: string; text: string }>;
-}): string {
-  const text = response.content[0].text
-  const match = text.match(/ID: ([a-z0-9]+)/)
-  return match ? match[1] : ''
-}
-
-/**
  * Create a complete mock of McpServer for integration tests
  */
 export function createMockMcpServer(): {
-  server: McpServer;
+  server: McpServer
   transport: {
-    onMessage: ReturnType<typeof vi.fn>;
-    sendMessage: ReturnType<typeof vi.fn>;
-  };
+    onMessage: ReturnType<typeof vi.fn>
+    sendMessage: ReturnType<typeof vi.fn>
+  }
   } {
   const server = {
     resource: vi.fn().mockReturnThis(),
