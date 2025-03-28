@@ -4216,9 +4216,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"mcp-template-node@workspace:.":
+"mcp-golang@workspace:.":
   version: 0.0.0-use.local
-  resolution: "mcp-template-node@workspace:."
+  resolution: "mcp-golang@workspace:."
   dependencies:
     "@eslint/js": "npm:^9.23.0"
     "@modelcontextprotocol/sdk": "npm:^1.8.0"
