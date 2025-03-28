@@ -409,35 +409,4 @@ export function registerGoTools(server: McpServer): void {
       }
     }
   )
-
-  // Tool: Run go mod tidy
-  server.tool(
-    'go_mod_tidy',
-    {
-      wd: z.string().describe('Working directory where the command will be executed (should contain go.mod file)')
-    },
-    async ({ wd }: { wd: string }) => {
-      // Validate that working directory is an absolute path
-      if (!isAbsolutePath(wd)) {
-        return createWdError(wd)
-      }
-
-      try {
-        return executeGoCommand(
-          'go mod tidy',
-          wd,
-          'Dependencies cleaned up successfully'
-        )
-      } catch (error) {
-        console.error('Error running go mod tidy:', error)
-        return {
-          content: [{
-            type: 'text' as const,
-            text: `Error running go mod tidy: ${error instanceof Error ? error.message : String(error)}`
-          }],
-          isError: true
-        }
-      }
-    }
-  )
 }

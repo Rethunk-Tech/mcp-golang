@@ -174,15 +174,4 @@ describe('Go Tools', () => {
       expect(result.content[0].text).toContain('ns/op')
     })
   })
-
-  describe('go_mod_tidy', () => {
-    it('should clean up dependencies', async () => {
-      const result = await server.callTool('go_mod_tidy', {
-        wd: testWorkingDir
-      })
-
-      expect(result.content[0].type).toBe('text')
-      expect(result.content[0].text).toContain('Dependencies cleaned up successfully')
-    })
-  })
 })
